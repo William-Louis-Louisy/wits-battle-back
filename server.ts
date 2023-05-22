@@ -3,6 +3,8 @@ import express from "express";
 import mongoose from "mongoose";
 import { setupRoutes } from "./routes";
 import cookieParser from "cookie-parser";
+import http from "http";
+import { Server } from "socket.io";
 require("dotenv").config();
 
 // DATABASE CONNECTION
@@ -35,7 +37,23 @@ app.use(cookieParser());
 // ROUTES
 setupRoutes(app);
 
+// SOCKET.IO SETUP
+const httpServer = http.createServer(app);
+const io = new Server(httpServer, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"],
+  },
+});
+
+io.on("connection", (socket) => {
+  console.log("a user connected :D");
+  socket.on("disconnect", () => {
+    console.log("user disconnected D:");
+  });
+});
+
 // START SERVER
-app.listen(process.env.PORT, () => {
-  console.log(`🟢 Listening on port ${process.env.PORT} `);
+httpServer.listen(process.env.PORT, () => {
+  console.log(`🟢 Listening on port ${process.env.PORT}`);
 });
