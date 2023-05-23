@@ -1,12 +1,5 @@
-import mongoose, { Schema, Types, Document } from "mongoose";
-
-interface IQuiz extends Document {
-  name: string;
-  creator: Types.ObjectId;
-  questions: Types.ObjectId[];
-  players: Types.ObjectId[];
-  gameMode: string;
-}
+import mongoose, { Schema } from "mongoose";
+import { IQuiz } from "../interfaces/schema.interfaces";
 
 // SCHEMA
 const QuizSchema = new Schema<IQuiz>({

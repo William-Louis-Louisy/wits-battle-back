@@ -1,8 +1,5 @@
 import mongoose, { Schema } from "mongoose";
-
-interface IQuestionType {
-  questionType: string;
-}
+import { IQuestionType } from "../interfaces/schema.interfaces";
 
 // SCHEMA
 const QuestionTypeSchema = new Schema<IQuestionType>({

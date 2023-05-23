@@ -1,12 +1,5 @@
-import mongoose, { Schema, Types, Document } from "mongoose";
-
-// INTERFACE
-interface IScoreboard extends Document {
-  user: Types.ObjectId;
-  quiz: Types.ObjectId;
-  score: number;
-  timestamp: Date;
-}
+import mongoose, { Schema } from "mongoose";
+import { IScoreboard } from "../interfaces/schema.interfaces";
 
 // SCHEMA
 const ScoreboardSchema = new Schema<IScoreboard>({

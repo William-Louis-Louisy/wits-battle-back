@@ -1,16 +1,5 @@
-import mongoose, { Schema, Types, Document } from "mongoose";
-
-// INTERFACE
-interface IQuestion extends Document {
-  questionType: Types.ObjectId;
-  category: string;
-  text: string;
-  choices: string[];
-  answer: string;
-  points: number;
-  penalty: number;
-  timer: number;
-}
+import mongoose, { Schema } from "mongoose";
+import { IQuestion } from "../interfaces/schema.interfaces";
 
 // SCHEMA
 const QuestionSchema = new Schema<IQuestion>({

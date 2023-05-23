@@ -1,16 +1,6 @@
-import mongoose, { Schema, Types, Document } from "mongoose";
+import mongoose, { Schema } from "mongoose";
 import bcrypt from "bcrypt";
-
-// INTERFACE
-interface IUser extends Document {
-  username: string;
-  email: string;
-  password: string;
-  profilePicture: string;
-  score: number;
-  friends: Types.ObjectId[];
-  isAdmin: boolean;
-}
+import { IUser } from "../interfaces/schema.interfaces";
 
 // SCHEMA
 const UserSchema = new Schema<IUser>({
