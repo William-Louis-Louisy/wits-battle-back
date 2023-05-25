@@ -1,44 +1,14 @@
-import { Response, Request } from "express";
 import jwt from "jsonwebtoken";
+import { Response, Request } from "express";
 import userModels from "../models/user.models";
+import { handleErrors } from "../utils/errorHandler";
 import { registerSchema } from "../middlewares/dataValidation";
+import { createToken, maxAge } from "../utils/jwtTokenGenerator";
 
 interface JwtPayload extends jwt.JwtPayload {
   id: string;
   isAdmin: boolean;
 }
-
-// CREATE TOKEN
-const maxAge = 3 * 24 * 60 * 60; // 3 days
-const createToken = (id: string) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET!, {
-    expiresIn: maxAge,
-  });
-};
-
-// ERROR HANDLING
-const handleErrors = (err: any) => {
-  let errors: { [key: string]: string } = {
-    username: "",
-    email: "",
-    password: "",
-  };
-
-  // Duplicate error code
-  if (err.code === 11000) {
-    errors.email = "That email is already registered";
-    return errors;
-  }
-
-  // Validation errors
-  if (err.message.includes("user validation failed")) {
-    Object.values(err.errors).forEach(({ properties }: any) => {
-      errors[properties.path] = properties.message;
-    });
-  }
-
-  return errors;
-};
 
 // USER CONTROLLER
 export const userController = {
@@ -50,15 +20,7 @@ export const userController = {
     // Validate user data
     const { error } = registerSchema.validate({ username, email, password });
     if (error) {
-      // reduce the error.details array into a single object
-      let errors = error.details.reduce((acc: { [key: string]: any }, curr) => {
-        // for each error detail, add a new property to the accumulator object
-        // use the 'path' value (joined by ".") as the property key,
-        // and the 'message' as its value
-        acc[curr.path.join(".")] = curr.message;
-        return acc;
-      }, {});
-
+      let errors = handleErrors(error);
       return res.status(400).json({ errors });
     }
 
@@ -68,16 +30,19 @@ export const userController = {
         $or: [{ email }, { username }],
       });
       if (userExists) {
-        return res
-          .status(400)
-          .json({ errors: "Email or username already in use" });
+        let errors;
+        if (userExists.email === email) {
+          errors = handleErrors({ code: 11000, key: "email" });
+        } else if (userExists.username === username) {
+          errors = handleErrors({ code: 11000, key: "username" });
+        }
+        return res.status(400).json({ errors });
       }
 
       const user = await userModels.create({ username, email, password });
       const token = createToken(user._id);
 
       res.cookie("jwt", token, { httpOnly: true, maxAge: maxAge * 1000 });
-
       res.status(201).json({ user: user._id });
     } catch (err) {
       const errors = handleErrors(err);
@@ -107,38 +72,6 @@ export const userController = {
         status: 200,
         data: user,
         message: "Successfully retrieved user by id",
-      });
-    } catch (err: any) {
-      res.status(400).json({ status: 400, message: err.message });
-    }
-  },
-
-  // Retrieve user by username
-  getUserByUsername: async function (req: Request, res: Response) {
-    try {
-      const user = await userModels
-        .findOne({ username: req.params.username })
-        .select("-password");
-      res.status(200).json({
-        status: 200,
-        data: user,
-        message: "Successfully retrieved user by username",
-      });
-    } catch (err: any) {
-      res.status(400).json({ status: 400, message: err.message });
-    }
-  },
-
-  // Retrieve user by email
-  getUserByEmail: async function (req: Request, res: Response) {
-    try {
-      const user = await userModels
-        .findOne({ email: req.params.email })
-        .select("-password");
-      res.status(200).json({
-        status: 200,
-        data: user,
-        message: "Successfully retrieved user by email",
       });
     } catch (err: any) {
       res.status(400).json({ status: 400, message: err.message });
